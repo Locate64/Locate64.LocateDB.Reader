@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29926.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Locate64.LocateDB.Reader", "Locate64.LocateDB.Reader\Locate64.LocateDB.Reader.csproj", "{E20ED1A5-3E4F-4C36-9C39-77B0A52B26AD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Locate64.LocateDB.Reader.Tests", "Locate64.LocateDB.Reader.Tests\Locate64.LocateDB.Reader.Tests.csproj", "{5B849004-77B8-454D-B139-30B4AD85FA16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{44E64F13-E281-42B1-9A5B-DAD64BC0555F}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E20ED1A5-3E4F-4C36-9C39-77B0A52B26AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E20ED1A5-3E4F-4C36-9C39-77B0A52B26AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E20ED1A5-3E4F-4C36-9C39-77B0A52B26AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E20ED1A5-3E4F-4C36-9C39-77B0A52B26AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B849004-77B8-454D-B139-30B4AD85FA16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B849004-77B8-454D-B139-30B4AD85FA16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B849004-77B8-454D-B139-30B4AD85FA16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B849004-77B8-454D-B139-30B4AD85FA16}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7E985FB1-7878-4581-AF49-9C1F226ECAFB}
+	EndGlobalSection
+EndGlobal
