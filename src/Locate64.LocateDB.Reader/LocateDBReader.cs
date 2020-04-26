@@ -99,7 +99,7 @@ namespace Locate64.LocateDB.Reader
             while (currentRootDirectory != null)
             {
                 string currentPath;
-                currentPathStack.Push(currentPath = currentRootDirectory.Path + @"\");
+                currentPathStack.Push(currentPath = currentRootDirectory.Path);
 
                 currentRootDirectory.FullName = currentPath;
 
@@ -113,7 +113,7 @@ namespace Locate64.LocateDB.Reader
                     {
                         var directoryEntry = DBDirectoryEntry.ReadFrom(binaryReader, typeAndAttributes);
 
-                        currentPath += @"\" + directoryEntry.DirectoryName;
+                        currentPath += (depth == 0 ? string.Empty : @"\") + directoryEntry.DirectoryName;
 
                         directoryEntry.ParentDirectory = depth == 0 ? null : dirs.Peek();
                         directoryEntry.RootDirectory = currentRootDirectory;

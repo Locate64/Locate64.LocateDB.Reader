@@ -43,7 +43,7 @@ namespace Locate64.LocateDB.Reader
             {
                 DataLength = dataLength,
                 RootType = (DBRootType)reader.ReadByte(),
-                Path = reader.ReadNullTerminatedUtf16String(),
+                Path = reader.ReadNullTerminatedUtf16String() + @"\",
                 VolumeName = reader.ReadNullTerminatedUtf16String(),
                 VolumeSerial = reader.ReadUInt32(),
                 FileSystem = reader.ReadNullTerminatedUtf16String(),
