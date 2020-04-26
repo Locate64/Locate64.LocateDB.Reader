@@ -30,6 +30,26 @@ namespace Locate64.LocateDB.Reader.Tests
         }
 
         [Test]
+        public void Verify_SecondEntry_IsValidRootDirectory()
+        {
+            var reader = new LocateDBReader(testStream1, true);
+
+            var entries = reader.Traverse();
+
+            var secondEntry = entries.Skip(1).First();
+            
+            Assert.That(secondEntry, Is.TypeOf<DBRootDirectoryEntry>());
+            Assert.That(secondEntry is DBRootDirectoryEntry, Is.True);
+            Assert.That(((DBRootDirectoryEntry) secondEntry).DataLength, Is.EqualTo(986));
+            Assert.That(((DBRootDirectoryEntry) secondEntry).RootType, Is.EqualTo(DBRootType.Removable));
+            Assert.That(((DBRootDirectoryEntry) secondEntry).VolumeName, Is.EqualTo("LOCATE32_NTFS"));
+            Assert.That(((DBRootDirectoryEntry) secondEntry).VolumeSerial, Is.EqualTo(3838827262));
+            Assert.That(((DBRootDirectoryEntry) secondEntry).FileSystem, Is.EqualTo("NTFS"));
+            Assert.That(((DBRootDirectoryEntry) secondEntry).NumberOfFiles, Is.EqualTo(10));
+            Assert.That(((DBRootDirectoryEntry) secondEntry).NumberOfDirectories, Is.EqualTo(7));
+        }
+
+        [Test]
         public void Verify_Header_IsValid()
         {
             var reader = new LocateDBReader(testStream1, true);

@@ -41,7 +41,7 @@ namespace Locate64.LocateDB.Reader
 
             var entry = new DBRootDirectoryEntry
             {
-                DataLength = reader.ReadUInt32(),
+                DataLength = dataLength,
                 RootType = (DBRootType)reader.ReadByte(),
                 Path = reader.ReadNullTerminatedUtf16String(),
                 VolumeName = reader.ReadNullTerminatedUtf16String(),
