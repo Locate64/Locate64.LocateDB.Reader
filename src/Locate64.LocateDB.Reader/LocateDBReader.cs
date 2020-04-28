@@ -131,7 +131,7 @@ namespace Locate64.LocateDB.Reader
 
                         fileEntry.ParentDirectory = depth == 0 ? null : dirs.Peek();
                         fileEntry.RootDirectory = currentRootDirectory;
-                        fileEntry.FullName = currentPath + @"\" + fileEntry.FileName;
+                        fileEntry.FullName = currentPath + (depth == 0 ? string.Empty : @"\") + fileEntry.FileName;
 
                         yield return fileEntry;
                     }

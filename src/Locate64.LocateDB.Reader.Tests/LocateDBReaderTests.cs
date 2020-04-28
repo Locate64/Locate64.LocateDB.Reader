@@ -50,6 +50,32 @@ namespace Locate64.LocateDB.Reader.Tests
         }
 
         [Test]
+        public void Verify_FileEntries_ShouldNotContainDoubleBackSlashes()
+        {
+            var reader = new LocateDBReader(testStream1, true);
+
+            var entries = reader.Traverse().Skip(1);
+
+            foreach (var entry in entries.Select(e => e as DBFileEntry).Where(e => e != null))
+            {
+                Assert.That(entry.FullName, Does.Not.Contain("\\\\"));
+            }
+        }
+
+        [Test]
+        public void Verify_DirectoryEntries_ShouldNotContainDoubleBackSlashes()
+        {
+            var reader = new LocateDBReader(testStream1, true);
+
+            var entries = reader.Traverse().Skip(1);
+
+            foreach (var entry in entries.Select(e => e as DBDirectoryEntry).Where(e => e != null))
+            {
+                Assert.That(entry.FullName, Does.Not.Contain("\\\\"));
+            }
+        }
+
+        [Test]
         public void Verify_Header_IsValid()
         {
             var reader = new LocateDBReader(testStream1, true);
