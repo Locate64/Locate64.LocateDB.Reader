@@ -30,6 +30,26 @@ namespace Locate64.LocateDB.Reader.Tests
         }
 
         [Test]
+        public void Verify_ExcludedFolder_ProperlyExcludesSelfAndChildren()
+        {
+            var reader = new LocateDBReader(testStream1);
+
+            var entries = reader.Traverse(new ExcludeRootFolder1AndChildrenFilter());
+
+            foreach (var entry in entries)
+            {
+                if (entry is DBFileEntry fileEntry)
+                {
+                    Assert.That(fileEntry.FullName, Does.Not.StartsWith(@"I:\RootFolder1"));
+                }
+                else if (entry is DBDirectoryEntry dirEntry)
+                {
+                    Assert.That(dirEntry.FullName, Does.Not.EqualTo(@"I:\RootFolder1"));
+                }
+            }
+        }
+
+        [Test]
         public void Verify_SecondEntry_IsValidRootDirectory()
         {
             var reader = new LocateDBReader(testStream1, true);
@@ -37,16 +57,16 @@ namespace Locate64.LocateDB.Reader.Tests
             var entries = reader.Traverse();
 
             var secondEntry = entries.Skip(1).First();
-            
+
             Assert.That(secondEntry, Is.TypeOf<DBRootDirectoryEntry>());
             Assert.That(secondEntry is DBRootDirectoryEntry, Is.True);
-            Assert.That(((DBRootDirectoryEntry) secondEntry).DataLength, Is.EqualTo(986));
-            Assert.That(((DBRootDirectoryEntry) secondEntry).RootType, Is.EqualTo(DBRootType.Removable));
-            Assert.That(((DBRootDirectoryEntry) secondEntry).VolumeName, Is.EqualTo("LOCATE32_NTFS"));
-            Assert.That(((DBRootDirectoryEntry) secondEntry).VolumeSerial, Is.EqualTo(3838827262));
-            Assert.That(((DBRootDirectoryEntry) secondEntry).FileSystem, Is.EqualTo("NTFS"));
-            Assert.That(((DBRootDirectoryEntry) secondEntry).NumberOfFiles, Is.EqualTo(10));
-            Assert.That(((DBRootDirectoryEntry) secondEntry).NumberOfDirectories, Is.EqualTo(7));
+            Assert.That(((DBRootDirectoryEntry)secondEntry).DataLength, Is.EqualTo(986));
+            Assert.That(((DBRootDirectoryEntry)secondEntry).RootType, Is.EqualTo(DBRootType.Removable));
+            Assert.That(((DBRootDirectoryEntry)secondEntry).VolumeName, Is.EqualTo("LOCATE32_NTFS"));
+            Assert.That(((DBRootDirectoryEntry)secondEntry).VolumeSerial, Is.EqualTo(3838827262));
+            Assert.That(((DBRootDirectoryEntry)secondEntry).FileSystem, Is.EqualTo("NTFS"));
+            Assert.That(((DBRootDirectoryEntry)secondEntry).NumberOfFiles, Is.EqualTo(10));
+            Assert.That(((DBRootDirectoryEntry)secondEntry).NumberOfDirectories, Is.EqualTo(7));
         }
 
         [Test]
@@ -83,7 +103,7 @@ namespace Locate64.LocateDB.Reader.Tests
             var entries = reader.Traverse();
 
             var header = entries.First() as DBHeader;
-            
+
             Assert.That(header, Is.Not.Null);
             Assert.That(header.Creator, Is.EqualTo("Creator goes here"));
             Assert.That(header.Description, Is.EqualTo("Description goes here"));
@@ -96,6 +116,20 @@ namespace Locate64.LocateDB.Reader.Tests
             Assert.That(header.NumberOfDirectories, Is.EqualTo(7));
             Assert.That(header.CreationTime, Is.EqualTo(new DBFileTime(2020, 4, 15, 13, 45, 12)));
             Assert.That(header.RemainingExtraBytes, Is.EqualTo(336));
+        }
+
+
+        private class ExcludeRootFolder1AndChildrenFilter : IDBEntryFilter
+        {
+            public DBEntryFilterResultActions Filter(DBEntry entry)
+            {
+                if (entry is DBDirectoryEntry dirEntry && dirEntry.FullName.StartsWith(@"I:\RootFolder1"))
+                {
+                    return DBEntryFilterResultActions.ExcludeChildren | DBEntryFilterResultActions.ExcludeSelf;
+                }
+
+                return DBEntryFilterResultActions.ExcludeNothing;
+            }
         }
     }
 }

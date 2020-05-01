@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-[assembly:InternalsVisibleTo("Locate64.LocateDB.Reader.Tests")]
+[assembly: InternalsVisibleTo("Locate64.LocateDB.Reader.Tests")]
 
 namespace Locate64.LocateDB.Reader
 {
@@ -69,32 +69,24 @@ namespace Locate64.LocateDB.Reader
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        /// Traverse the tree map, returning each individually found entry (root dir, dir or file).
-        ///
-        /// <remarks>
-        /// Will throw if the data is corrupted or when the object was disposed while still traversing.
-        /// Do not forget to dispose of the reader and close streams yourself if leaveOpen is false when you stop
-        /// traversing before it finished yielding all results.
-        /// </remarks>
-        /// </summary>
-        /// <returns>Enumerable tree map.</returns>
-        public IEnumerable<DBEntry> Traverse()
+        public IEnumerable<DBEntry> Traverse(IDBEntryFilter filter)
         {
             var header = DBHeader.ReadFrom(binaryReader);
+            var hasFilter = filter != null;
 
             // Always return the header as the first entry
             yield return header;
 
             // var positionBeforeRead = inputStream.Position;
 
+            var positionBeforeReadRootDirectory = inputStream.Position;
             var currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader);
 
             // var readLength = inputStream.Position - positionBeforeRead;
 
             int depth = 0;
             var dirs = new Stack<DBDirectoryEntry>();
-            var currentPathStack = new Stack<string>(260);
+            var currentPathStack = new Stack<string>(64);
 
             while (currentRootDirectory != null)
             {
@@ -102,8 +94,26 @@ namespace Locate64.LocateDB.Reader
                 currentPathStack.Push(currentPath = currentRootDirectory.Path);
 
                 currentRootDirectory.FullName = currentPath;
+                var filterResult = filter?.Filter(currentRootDirectory) ?? DBEntryFilterResultActions.ExcludeNothing;
 
-                yield return currentRootDirectory;
+                if (!hasFilter || (filterResult == DBEntryFilterResultActions.ExcludeNothing
+                    || !filterResult.HasFlag(DBEntryFilterResultActions.ExcludeSelf)))
+                {
+                    yield return currentRootDirectory;
+                }
+
+                if (hasFilter && filterResult.HasFlag(DBEntryFilterResultActions.ExcludeChildren))
+                {
+                    // Skip the rest
+                    inputStream.Position += (positionBeforeReadRootDirectory - inputStream.Position) + currentRootDirectory.DataLength + 4;
+
+                    currentPathStack.Pop();
+
+                    positionBeforeReadRootDirectory = inputStream.Position;
+                    currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader);
+
+                    continue;
+                }
 
                 var typeAndAttributes = (DBEntryAttributes)binaryReader.ReadByte();
 
@@ -111,6 +121,8 @@ namespace Locate64.LocateDB.Reader
                 {
                     if (typeAndAttributes.HasFlag(DBEntryAttributes.Directory))
                     {
+                        var positionBeforeReadDirectory = inputStream.Position;
+
                         var directoryEntry = DBDirectoryEntry.ReadFrom(binaryReader, typeAndAttributes);
 
                         currentPath += (depth == 0 ? string.Empty : @"\") + directoryEntry.DirectoryName;
@@ -119,11 +131,29 @@ namespace Locate64.LocateDB.Reader
                         directoryEntry.RootDirectory = currentRootDirectory;
                         directoryEntry.FullName = currentPath;
 
-                        depth++;
+                        filterResult = filter?.Filter(directoryEntry) ?? DBEntryFilterResultActions.ExcludeNothing;
 
-                        dirs.Push(directoryEntry);
+                        if (!hasFilter || (filterResult == DBEntryFilterResultActions.ExcludeNothing
+                            || !filterResult.HasFlag(DBEntryFilterResultActions.ExcludeSelf)))
+                        {
+                            yield return directoryEntry;
+                        }
 
-                        yield return directoryEntry;
+                        if (hasFilter && filterResult.HasFlag(DBEntryFilterResultActions.ExcludeChildren))
+                        {
+                            // Skip the rest
+                            inputStream.Position += (positionBeforeReadDirectory - inputStream.Position) + directoryEntry.DataLength;
+
+                            var poppedDir = dirs.Count > 0 ? dirs.Peek() : null;
+
+                            currentPath = poppedDir?.ParentDirectory?.FullName ?? directoryEntry?.RootDirectory?.FullName ?? string.Empty;
+                        }
+                        else
+                        {
+                            depth++;
+
+                            dirs.Push(directoryEntry);
+                        }
                     }
                     else if (typeAndAttributes != 0)
                     {
@@ -133,7 +163,11 @@ namespace Locate64.LocateDB.Reader
                         fileEntry.RootDirectory = currentRootDirectory;
                         fileEntry.FullName = currentPath + (depth == 0 ? string.Empty : @"\") + fileEntry.FileName;
 
-                        yield return fileEntry;
+                        if (!hasFilter || (filterResult == DBEntryFilterResultActions.ExcludeNothing
+                            || !filterResult.HasFlag(DBEntryFilterResultActions.ExcludeSelf)))
+                        {
+                            yield return fileEntry;
+                        }
                     }
                     else
                     {
@@ -156,10 +190,27 @@ namespace Locate64.LocateDB.Reader
                 // positionBeforeRead = inputStream.Position;
 
                 currentPathStack.Pop();
+
+                positionBeforeReadRootDirectory = inputStream.Position;
                 currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader);
 
                 // readLength = inputStream.Position - positionBeforeRead;
             }
+        }
+
+        /// <summary>
+        /// Traverse the tree map, returning each individually found entry (root dir, dir or file).
+        ///
+        /// <remarks>
+        /// Will throw if the data is corrupted or when the object was disposed while still traversing.
+        /// Do not forget to dispose of the reader and close streams yourself if leaveOpen is false when you stop
+        /// traversing before it finished yielding all results.
+        /// </remarks>
+        /// </summary>
+        /// <returns>Enumerable tree map.</returns>
+        public IEnumerable<DBEntry> Traverse()
+        {
+            return Traverse(null);
         }
 
         private void Dispose(bool disposing)
