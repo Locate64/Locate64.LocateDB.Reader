@@ -14,7 +14,7 @@ namespace Locate64.LocateDB.Reader.Tests
         [SetUp]
         public void Setup()
         {
-            testStream1 = typeof(LocateDBReaderTests).Assembly.GetManifestResourceStream("Locate64.LocateDB.Reader.Tests.Resources.testset-a.dbs");
+            testStream1 = typeof(LocateDBEnumeratorTests).Assembly.GetManifestResourceStream("Locate64.LocateDB.Reader.Tests.Resources.testset-a.dbs");
         }
 
         [Test]
@@ -22,31 +22,9 @@ namespace Locate64.LocateDB.Reader.Tests
         {
             var reader = new LocateDBReader(testStream1, true);
 
-            var entries = reader.Traverse();
-
-            var firstEntry = entries.First();
+            var firstEntry = reader.Read();
 
             Assert.That(firstEntry, Is.TypeOf<DBHeader>());
-        }
-
-        [Test]
-        public void Verify_ExcludedFolder_ProperlyExcludesSelfAndChildren()
-        {
-            var reader = new LocateDBReader(testStream1);
-
-            var entries = reader.Traverse(new ExcludeRootFolder1AndChildrenFilter());
-
-            foreach (var entry in entries)
-            {
-                if (entry is DBFileEntry fileEntry)
-                {
-                    Assert.That(fileEntry.FullName, Does.Not.StartsWith(@"I:\RootFolder1"));
-                }
-                else if (entry is DBDirectoryEntry dirEntry)
-                {
-                    Assert.That(dirEntry.FullName, Does.Not.EqualTo(@"I:\RootFolder1"));
-                }
-            }
         }
 
         [Test]
@@ -54,9 +32,9 @@ namespace Locate64.LocateDB.Reader.Tests
         {
             var reader = new LocateDBReader(testStream1, true);
 
-            var entries = reader.Traverse();
+            reader.Read();
 
-            var secondEntry = entries.Skip(1).First();
+            var secondEntry = reader.Read();
 
             Assert.That(secondEntry, Is.TypeOf<DBRootDirectoryEntry>());
             Assert.That(secondEntry is DBRootDirectoryEntry, Is.True);
@@ -74,25 +52,128 @@ namespace Locate64.LocateDB.Reader.Tests
         {
             var reader = new LocateDBReader(testStream1, true);
 
-            var entries = reader.Traverse().Skip(1);
+            DBEntry entry;
 
-            foreach (var entry in entries.Select(e => e as DBFileEntry).Where(e => e != null))
+            do
             {
-                Assert.That(entry.FullName, Does.Not.Contain("\\\\"));
-            }
+                entry = reader.Read();
+
+                if (entry is DBFileEntry fileEntry)
+                {
+                    Assert.That(fileEntry.FullName, Does.Not.Contain("\\\\"));
+                }
+            } while (entry != null);
+        }
+
+        [Test]
+        public void Verify_SkipChildren_WorksForDirectories()
+        {
+            var reader = new LocateDBReader(testStream1, true);
+
+            DBEntry entry;
+
+            do
+            {
+                entry = reader.Read();
+
+                if (entry is DBDirectoryEntry dirEntry)
+                {
+                    if (dirEntry.FullName == @"I:\RootFolder1")
+                    {
+                        reader.SkipChildren();
+                    }
+                    else
+                    {
+                        Assert.That(dirEntry.FullName, Does.Not.StartsWith(@"I:\RootFolder1\"));
+                    }
+                }
+                else if (entry is DBFileEntry fileEntry)
+                {
+                    Assert.That(fileEntry.FullName, Does.Not.StartsWith(@"I:\RootFolder1\"));
+                }
+            } while (entry != null);
+        }
+
+        [Test]
+        public void Verify_SkipChildren_WorksForRootDirectories()
+        {
+            var reader = new LocateDBReader(testStream1, true);
+
+            DBEntry entry;
+
+            do
+            {
+                entry = reader.Read();
+
+                if (entry is DBRootDirectoryEntry rootDirEntry)
+                {
+                    if (rootDirEntry.FullName == @"I:\")
+                    {
+                        reader.SkipChildren();
+                    }
+                    else
+                    {
+                        Assert.That(rootDirEntry.FullName, Does.Not.StartsWith(@"I:\"));
+                    }
+                }
+                else if (entry is DBDirectoryEntry dirEntry)
+                {
+                    Assert.That(dirEntry.FullName, Does.Not.StartsWith(@"I:\"));
+                }
+                else if (entry is DBFileEntry fileEntry)
+                {
+                    Assert.That(fileEntry.FullName, Does.Not.StartsWith(@"I:\"));
+                }
+            } while (entry != null);
+        }
+
+        [Test]
+        public void Verify_FileEntries2_ShouldNotContainDoubleBackSlashes()
+        {
+            var reader = new LocateDBReader(testStream1, true);
+
+            DBEntry entry;
+
+            do
+            {
+                entry = reader.Read();
+
+                if (entry is DBFileEntry fileEntry)
+                {
+                    Console.WriteLine(fileEntry.FullName);
+                    Assert.That(fileEntry.FullName, Does.Not.Contain("\\\\"));
+                } else if (entry is DBDirectoryEntry dirEntry)
+                {
+                    if (dirEntry.FullName == @"I:\RootFolder1")
+                    {
+                        reader.SkipChildren();
+                    }
+                } else if (entry is DBRootDirectoryEntry rootDirEntry)
+                {
+                    if (rootDirEntry.FullName == @"I:\")
+                    {
+                        reader.SkipChildren();
+                    }
+                }
+            } while (entry != null);
         }
 
         [Test]
         public void Verify_DirectoryEntries_ShouldNotContainDoubleBackSlashes()
         {
             var reader = new LocateDBReader(testStream1, true);
+            
+            DBEntry entry;
 
-            var entries = reader.Traverse().Skip(1);
-
-            foreach (var entry in entries.Select(e => e as DBDirectoryEntry).Where(e => e != null))
+            do
             {
-                Assert.That(entry.FullName, Does.Not.Contain("\\\\"));
-            }
+                entry = reader.Read();
+
+                if (entry is DBDirectoryEntry directoryEntry)
+                {
+                    Assert.That(directoryEntry.FullName, Does.Not.Contain("\\\\"));
+                }
+            } while (entry != null);
         }
 
         [Test]
@@ -100,9 +181,7 @@ namespace Locate64.LocateDB.Reader.Tests
         {
             var reader = new LocateDBReader(testStream1, true);
 
-            var entries = reader.Traverse();
-
-            var header = entries.First() as DBHeader;
+            var header = reader.Read() as DBHeader;
 
             Assert.That(header, Is.Not.Null);
             Assert.That(header.Creator, Is.EqualTo("Creator goes here"));
@@ -116,20 +195,6 @@ namespace Locate64.LocateDB.Reader.Tests
             Assert.That(header.NumberOfDirectories, Is.EqualTo(7));
             Assert.That(header.CreationTime, Is.EqualTo(new DBFileTime(2020, 4, 15, 13, 45, 12)));
             Assert.That(header.RemainingExtraBytes, Is.EqualTo(336));
-        }
-
-
-        private class ExcludeRootFolder1AndChildrenFilter : IDBEntryFilter
-        {
-            public DBEntryFilterResultActions Filter(DBEntry entry)
-            {
-                if (entry is DBDirectoryEntry dirEntry && dirEntry.FullName.StartsWith(@"I:\RootFolder1"))
-                {
-                    return DBEntryFilterResultActions.ExcludeChildren | DBEntryFilterResultActions.ExcludeSelf;
-                }
-
-                return DBEntryFilterResultActions.ExcludeNothing;
-            }
         }
     }
 }
