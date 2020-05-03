@@ -10,6 +10,7 @@ namespace Locate64.LocateDB.Reader
         private readonly bool leaveOpen;
         private readonly Stack<string> currentPathStack = new Stack<string>(64);
         private readonly Stack<DBDirectoryEntry> dirStack = new Stack<DBDirectoryEntry>(64);
+        private readonly StringBuilder strBuilder = new StringBuilder(255);
         private BinaryReader binaryReader;
         private Stream inputStream;
         private long positionBeforeReadRootDirectory;
@@ -97,7 +98,7 @@ namespace Locate64.LocateDB.Reader
 
                 case ReaderState.ReadHeaderNext:
                 {
-                    LastReadEntry = Header = DBHeader.ReadFrom(binaryReader);
+                    LastReadEntry = Header = DBHeader.ReadFrom(binaryReader, strBuilder);
 
                     state = ReaderState.ReadRootDirectoryNext;
 
@@ -108,7 +109,7 @@ namespace Locate64.LocateDB.Reader
                 {
                     positionBeforeReadRootDirectory = inputStream.Position;
 
-                    LastReadEntry = currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader);
+                    LastReadEntry = currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader, strBuilder);
 
                     if (currentRootDirectory == null)
                     {
@@ -135,7 +136,7 @@ namespace Locate64.LocateDB.Reader
                         {
                             positionBeforeReadDirectory = inputStream.Position;
 
-                            var directoryEntry = DBDirectoryEntry.ReadFrom(binaryReader, typeAndAttributes);
+                            var directoryEntry = DBDirectoryEntry.ReadFrom(binaryReader, typeAndAttributes, strBuilder);
 
                             currentPath += (depth == 0 ? string.Empty : @"\") + directoryEntry.DirectoryName;
 
@@ -152,7 +153,7 @@ namespace Locate64.LocateDB.Reader
 
                         if (typeAndAttributes != 0)
                         {
-                            var fileEntry = DBFileEntry.ReadFrom(binaryReader, typeAndAttributes);
+                            var fileEntry = DBFileEntry.ReadFrom(binaryReader, typeAndAttributes, strBuilder);
 
                             fileEntry.ParentDirectory = depth == 0 ? null : dirStack.Peek();
                             fileEntry.RootDirectory = currentRootDirectory;

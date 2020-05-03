@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>0.0.6.0</AssemblyVersion>
-    <FileVersion>0.0.6.0</FileVersion>
+    <AssemblyVersion>0.0.7.0</AssemblyVersion>
+    <FileVersion>0.0.7.0</FileVersion>
     <Company>The Locate64 Developers</Company>
     <Authors>The Locate64 Developers</Authors>
-    <Version>0.0.6</Version>
+    <Version>0.0.7</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright (c) 2020 The Locate64 Developers</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -14,8 +14,7 @@
     <PackageProjectUrl>https://github.com/Locate64/Locate64.LocateDB.Reader</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Locate64/Locate64.LocateDB.Reader.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>Breaking change: Renamed the LocateDBReader class to LocateDBEnumerator and renamed the Traverse method to EnumerateEntries
-Added new LocateDBReader class that can read entries 1 by 1 and has the ability to skip reading the children of the last read entry</PackageReleaseNotes>
+    <PackageReleaseNotes>Reading the strings from the LocateDB database file now reuses a single StringBuilder instance (per enumeration/reader) to speed up reading in such strings</PackageReleaseNotes>
     <PackageTags>locate locatedb reader locate64</PackageTags>
   </PropertyGroup>
 

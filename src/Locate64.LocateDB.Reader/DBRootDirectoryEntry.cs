@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace Locate64.LocateDB.Reader
 {
@@ -30,7 +31,7 @@ namespace Locate64.LocateDB.Reader
 
         public uint VolumeSerial { get; set; } // DWORD
 
-        public static DBRootDirectoryEntry ReadFrom(BinaryReader reader)
+        public static DBRootDirectoryEntry ReadFrom(BinaryReader reader, StringBuilder stringBuilder)
         {
             var dataLength = reader.ReadUInt32();
 
@@ -43,10 +44,10 @@ namespace Locate64.LocateDB.Reader
             {
                 DataLength = dataLength,
                 RootType = (DBRootType)reader.ReadByte(),
-                Path = reader.ReadNullTerminatedUtf16String() + @"\",
-                VolumeName = reader.ReadNullTerminatedUtf16String(),
+                Path = reader.ReadNullTerminatedUtf16String(stringBuilder) + @"\",
+                VolumeName = reader.ReadNullTerminatedUtf16String(stringBuilder),
                 VolumeSerial = reader.ReadUInt32(),
-                FileSystem = reader.ReadNullTerminatedUtf16String(),
+                FileSystem = reader.ReadNullTerminatedUtf16String(stringBuilder),
                 NumberOfFiles = reader.ReadUInt32(),
                 NumberOfDirectories = reader.ReadUInt32(),
             };

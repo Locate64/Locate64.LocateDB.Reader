@@ -10,7 +10,7 @@ namespace Locate64.LocateDB.Reader.Tests
         [Test]
         public void ReadNullTerminatedUtf16String_BinaryReaderIsNull_ThrowNullReferenceException()
         {
-            Assert.Catch<NullReferenceException>(() => Extensions.ReadNullTerminatedUtf16String(null));
+            Assert.Catch<NullReferenceException>(() => Extensions.ReadNullTerminatedUtf16String(null, new StringBuilder()));
         }
         
         [Test]
@@ -35,7 +35,7 @@ namespace Locate64.LocateDB.Reader.Tests
 
             /* Execution */
 
-            var readValue = binaryReader.ReadNullTerminatedUtf16String();
+            var readValue = binaryReader.ReadNullTerminatedUtf16String(new StringBuilder());
 
             /* Assertion */
 

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace Locate64.LocateDB.Reader
 {
@@ -37,14 +38,14 @@ namespace Locate64.LocateDB.Reader
             return $"{nameof(Attributes)}: {Attributes}, {nameof(DataLength)}: {DataLength}, {nameof(DirectoryNameLength)}: {DirectoryNameLength}, {nameof(FullName)}: {FullName}, {nameof(DirectoryName)}: {DirectoryName}, {nameof(ModificationTime)}: {ModificationTime}, {nameof(CreationTime)}: {CreationTime}, {nameof(LastAccessedDate)}: {LastAccessedDate}";
         }
 
-        internal static DBDirectoryEntry ReadFrom(BinaryReader reader, DBEntryAttributes attributes)
+        internal static DBDirectoryEntry ReadFrom(BinaryReader reader, DBEntryAttributes attributes, StringBuilder stringBuilder)
         {
             var entry = new DBDirectoryEntry
             {
                 Attributes = attributes,
                 DataLength = reader.ReadUInt32(),
                 DirectoryNameLength = reader.ReadByte(),
-                DirectoryName = reader.ReadNullTerminatedUtf16String(),
+                DirectoryName = reader.ReadNullTerminatedUtf16String(stringBuilder),
                 ModificationTime = (DBDWord)reader.ReadUInt32(),
                 CreationTime = (DBDWord)reader.ReadUInt32(),
                 LastAccessedDate = (DBDWord)reader.ReadUInt32(),

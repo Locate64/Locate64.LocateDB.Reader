@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace Locate64.LocateDB.Reader
 {
@@ -8,18 +9,20 @@ namespace Locate64.LocateDB.Reader
         /// Read a null terminated UTF16 string from the given binary reader.
         /// </summary>
         /// <param name="binaryReader">BinaryReader used to read the string from. Throws NullReferenceException if binaryReader is null.</param>
+        /// <param name="stringBuilder">StringBuilder instance used to build the final string. Will be Clear()ed first.</param>
         /// <returns>The read string.</returns>
-        public static string ReadNullTerminatedUtf16String(this BinaryReader binaryReader)
+        public static string ReadNullTerminatedUtf16String(this BinaryReader binaryReader, StringBuilder stringBuilder)
         {
-            var str = string.Empty;
             char ch;
+
+            stringBuilder.Clear();
 
             while ((ch = (char)binaryReader.ReadInt16()) != 0)
             {
-                str += ch;
+                stringBuilder.Append(ch);
             }
 
-            return str;
+            return stringBuilder.ToString();
         }
     }
 }

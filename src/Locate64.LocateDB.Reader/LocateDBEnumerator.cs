@@ -71,7 +71,9 @@ namespace Locate64.LocateDB.Reader
 
         public IEnumerable<DBEntry> EnumerateEntries(IDBEntryFilter filter)
         {
-            var header = DBHeader.ReadFrom(binaryReader);
+            var strBuilder = new StringBuilder(255);
+
+            var header = DBHeader.ReadFrom(binaryReader, strBuilder);
             var hasFilter = filter != null;
 
             // Always return the header as the first entry
@@ -80,7 +82,7 @@ namespace Locate64.LocateDB.Reader
             // var positionBeforeRead = inputStream.Position;
 
             var positionBeforeReadRootDirectory = inputStream.Position;
-            var currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader);
+            var currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader, strBuilder);
 
             // var readLength = inputStream.Position - positionBeforeRead;
 
@@ -110,7 +112,7 @@ namespace Locate64.LocateDB.Reader
                     currentPathStack.Pop();
 
                     positionBeforeReadRootDirectory = inputStream.Position;
-                    currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader);
+                    currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader, strBuilder);
 
                     continue;
                 }
@@ -123,7 +125,7 @@ namespace Locate64.LocateDB.Reader
                     {
                         var positionBeforeReadDirectory = inputStream.Position;
 
-                        var directoryEntry = DBDirectoryEntry.ReadFrom(binaryReader, typeAndAttributes);
+                        var directoryEntry = DBDirectoryEntry.ReadFrom(binaryReader, typeAndAttributes, strBuilder);
 
                         currentPath += (depth == 0 ? string.Empty : @"\") + directoryEntry.DirectoryName;
 
@@ -157,7 +159,7 @@ namespace Locate64.LocateDB.Reader
                     }
                     else if (typeAndAttributes != 0)
                     {
-                        var fileEntry = DBFileEntry.ReadFrom(binaryReader, typeAndAttributes);
+                        var fileEntry = DBFileEntry.ReadFrom(binaryReader, typeAndAttributes, strBuilder);
 
                         fileEntry.ParentDirectory = depth == 0 ? null : dirs.Peek();
                         fileEntry.RootDirectory = currentRootDirectory;
@@ -192,7 +194,7 @@ namespace Locate64.LocateDB.Reader
                 currentPathStack.Pop();
 
                 positionBeforeReadRootDirectory = inputStream.Position;
-                currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader);
+                currentRootDirectory = DBRootDirectoryEntry.ReadFrom(binaryReader, strBuilder);
 
                 // readLength = inputStream.Position - positionBeforeRead;
             }

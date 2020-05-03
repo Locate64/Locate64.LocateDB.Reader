@@ -41,7 +41,7 @@ namespace Locate64.LocateDB.Reader
             return $"{nameof(Marker)}: {Marker}, {nameof(Version)}: {Version}, {nameof(Flags)}: {Flags}, {nameof(RemainingExtraBytes)}: {RemainingExtraBytes}, {nameof(Creator)}: {Creator}, {nameof(Description)}: {Description}, {nameof(ExtraInformation1)}: {ExtraInformation1}, {nameof(ExtraInformation2)}: {ExtraInformation2}, {nameof(CreationTime)}: {CreationTime}, {nameof(NumberOfFiles)}: {NumberOfFiles}, {nameof(NumberOfDirectories)}: {NumberOfDirectories}";
         }
 
-        internal static DBHeader ReadFrom(BinaryReader reader)
+        internal static DBHeader ReadFrom(BinaryReader reader, StringBuilder stringBuilder)
         {
             var marker = Encoding.UTF8.GetString(reader.ReadBytes(8));
             var version = Encoding.UTF8.GetString(reader.ReadBytes(2));
@@ -73,10 +73,10 @@ namespace Locate64.LocateDB.Reader
                 Version = version,
                 Flags = flags,
                 RemainingExtraBytes = reader.ReadUInt32(),
-                Creator = reader.ReadNullTerminatedUtf16String(),
-                Description = reader.ReadNullTerminatedUtf16String(),
-                ExtraInformation1 = reader.ReadNullTerminatedUtf16String(),
-                ExtraInformation2 = reader.ReadNullTerminatedUtf16String(),
+                Creator = reader.ReadNullTerminatedUtf16String(stringBuilder),
+                Description = reader.ReadNullTerminatedUtf16String(stringBuilder),
+                ExtraInformation1 = reader.ReadNullTerminatedUtf16String(stringBuilder),
+                ExtraInformation2 = reader.ReadNullTerminatedUtf16String(stringBuilder),
                 CreationTime = (DBDWord)reader.ReadUInt32(),
                 NumberOfFiles = reader.ReadUInt32(),
                 NumberOfDirectories = reader.ReadUInt32(),
